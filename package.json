@@ -1,0 +1,26 @@
+{
+  "name": "employee-track",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mkanczuzewski/employee-tracker-feat-sql.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mkanczuzewski/employee-tracker-feat-sql/issues"
+  },
+  "homepage": "https://github.com/mkanczuzewski/employee-tracker-feat-sql#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^8.2.0",
+    "mysql2": "^2.3.3"
+  }
+}
