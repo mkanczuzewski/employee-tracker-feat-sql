@@ -1,4 +1,5 @@
 const inquirer = require('inquirer');
+const db = require('./db/connection');
 
 const promptQuestions = 
 [
@@ -78,7 +79,14 @@ const promptQuestions =
 //Create a function to initialize app
 function init() 
 {
-    return inquirer.prompt(promptQuestions);
+    return inquirer.prompt(promptQuestions)
+    .then((inputAnswer) => {
+        if (inputAnswer.choices === 'View all Departments'){
+            db.query(`SELECT * FROM department`, function (err, results) {
+                console.log(results);
+            });
+        }
+    });
 };
 
 // Function call to initialize app
