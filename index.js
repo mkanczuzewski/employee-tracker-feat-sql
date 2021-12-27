@@ -1,6 +1,7 @@
+const res = require('express/lib/response');
 const inquirer = require('inquirer');
 const db = require('./db/connection');
-
+const employeeArray = [];
 
 // const confirmRoleSalary = async (input) => 
 // {
@@ -85,6 +86,13 @@ const promptQuestions =
         when: (answers) => answers.choices === 'Add an Employee',
     },
     {
+        type: 'list',
+        name: 'selectEmployee',
+        message: 'Select an Employee to change',
+        when: (answers) => answers.choices === 'Update an Employee Role',
+        choices: employeeArray,
+    },
+    {
         type: 'input',
         name: 'updateRole',
         message: 'Change Employee Role:',
@@ -92,11 +100,21 @@ const promptQuestions =
     },
 ];
 
-
+function loadEmployeeList() 
+{
+    db.query(`SELECT concat(first_name, \' \', last_name) as employeeName FROM employee;`, function (err, results) {
+        for (var i = 0; i < results.length; i++)
+        {
+            employeeArray.push(results[i].employeeName)
+        }
+        
+    });
+}
 
 //Create a function to initialize app
 function init() 
 {
+    loadEmployeeList();
     return inquirer.prompt(promptQuestions)
     .then((inputAnswer) => {
         if (inputAnswer.choices === 'View all Departments')
@@ -194,16 +212,16 @@ function addEmployee(newEmpFName, newEmpLName, newEmpTitle, newEmpMgr)
     });
 }
 
-function updateRole(updateRole)
+function updateRole(updateRole, empId)
 {
-    const addRoleSql = `UPDATE employee SET (role_id) = VALUES (?) WHERE id = `;
-    const addRoleParams = [updateRole];
+    const addRoleSql = `UPDATE employee SET role_id = ? WHERE id = ?`;
+    const addRoleParams = [updateRole, empId];
     db.query(addRoleSql, addRoleParams, (err, result) => 
     {
         if (err) {
         console.log(err.message);
         return;
         }
-        console.log('Employee successfully added to database.');
+        console.log('Employee title successfully updated in database.');
     });
 }
