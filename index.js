@@ -119,9 +119,17 @@ function init()
         {
             addDept(inputAnswer.addDeptName);
         }
+        else if (inputAnswer.choices === 'Add an Employee')
+        {
+            addEmployee(inputAnswer.newEmpFName, inputAnswer.newEmpLName, inputAnswer.newEmpTitle, inputAnswer.newEmpMgr);
+        }
+        else if (inputAnswer.choices === 'Update an Employee Role')
+        {
+            updateRole(inputAnswer.updateRole);
+        }
     });
 };
-
+updateRole
 // Function call to initialize app
 init()
 
@@ -156,7 +164,7 @@ function addRole(roleTitle, roleSalary, deptName)
         }
         console.log('Role successfully added to database.');
     });
-}
+};
 
 function addDept(addDeptName)
 {
@@ -169,5 +177,33 @@ function addDept(addDeptName)
         return;
         }
         console.log('Department successfully added to database.');
+    });
+};
+
+function addEmployee(newEmpFName, newEmpLName, newEmpTitle, newEmpMgr)
+{
+    const addRoleSql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`;
+    const addRoleParams = [newEmpFName, newEmpLName, newEmpTitle, newEmpMgr];
+    db.query(addRoleSql, addRoleParams, (err, result) => 
+    {
+        if (err) {
+        console.log(err.message);
+        return;
+        }
+        console.log('Employee successfully added to database.');
+    });
+}
+
+function updateRole(updateRole)
+{
+    const addRoleSql = `UPDATE employee SET (role_id) = VALUES (?) WHERE id = `;
+    const addRoleParams = [updateRole];
+    db.query(addRoleSql, addRoleParams, (err, result) => 
+    {
+        if (err) {
+        console.log(err.message);
+        return;
+        }
+        console.log('Employee successfully added to database.');
     });
 }
