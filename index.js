@@ -1,6 +1,16 @@
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 
+
+// const confirmRoleSalary = async (input) => 
+// {
+//     if (input !== decimal) 
+//     {
+//         return 'Incorrect Answer';
+//     }
+//     return true;
+// };
+
 const promptQuestions = 
 [
     {
@@ -28,6 +38,14 @@ const promptQuestions =
         type: 'input',
         name: 'roleSalary',
         message: 'What is the employee\'s salary?',
+        validate: (valSalary) => 
+        {
+            if (isNaN(valSalary)) 
+            {
+              return "Please backspace and enter a number";
+            }
+            return true;
+        },
         when: (answers) => answers.choices === 'Add a Role',
     },
     {
@@ -81,13 +99,75 @@ function init()
 {
     return inquirer.prompt(promptQuestions)
     .then((inputAnswer) => {
-        if (inputAnswer.choices === 'View all Departments'){
-            db.query(`SELECT * FROM department`, function (err, results) {
-                console.log(results);
-            });
+        if (inputAnswer.choices === 'View all Departments')
+        {
+            getAllDepts();
+        } 
+        else if (inputAnswer.choices === 'View all Roles')
+        { 
+            getAllRoles();
+        }
+        else if (inputAnswer.choices === 'View all Employees')
+        { 
+            getAllEmp();
+        }
+        else if (inputAnswer.choices === 'Add a Role')
+        {
+            addRole(inputAnswer.roleTitle, inputAnswer.roleSalary, inputAnswer.deptName);
+        }
+        else if (inputAnswer.choices === 'Add a Department')
+        {
+            addDept(inputAnswer.addDeptName);
         }
     });
 };
 
 // Function call to initialize app
 init()
+
+// Functions to get all the results from a single table
+function getAllDepts() {
+    db.query(`SELECT * FROM department`, function (err, results) {
+        console.table(results);
+    });
+};
+
+function getAllRoles() {
+    db.query(`SELECT * FROM role`, function (err, results) {
+        console.table(results);
+    });
+};
+
+function getAllEmp() {
+    db.query(`SELECT * FROM employee`, function (err, results) {
+        console.table(results);
+    });
+};
+
+function addRole(roleTitle, roleSalary, deptName)
+{
+    const addRoleSql = `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`;
+    const addRoleParams = [roleTitle, roleSalary, deptName];
+    db.query(addRoleSql, addRoleParams, (err, result) => 
+    {
+        if (err) {
+        console.log(err.message);
+        return;
+        }
+        console.log('Role successfully added to database.');
+    });
+}
+
+function addDept(addDeptName)
+{
+    const addRoleSql = `INSERT INTO department (name) VALUES (?)`;
+    const addRoleParams = [addDeptName];
+    db.query(addRoleSql, addRoleParams, (err, result) => 
+    {
+        if (err) {
+        console.log(err.message);
+        return;
+        }
+        console.log('Department successfully added to database.');
+    });
+}
