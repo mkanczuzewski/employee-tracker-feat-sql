@@ -1,4 +1,3 @@
-const res = require('express/lib/response');
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 const employeeArray = [];
@@ -116,15 +115,15 @@ async function init()
     .then(async (inputAnswer) => {
         if (inputAnswer.choices === 'View all Departments')
         {
-            getAllDepts();
+            await getAllDepts();
         } 
         else if (inputAnswer.choices === 'View all Roles')
         { 
-            getAllRoles();
+            await getAllRoles();
         }
         else if (inputAnswer.choices === 'View all Employees')
         { 
-            getAllEmp();
+            await getAllEmp();
         }
         else if (inputAnswer.choices === 'Add a Role')
         {
@@ -154,22 +153,34 @@ catch (err){
 init()
 
 // Functions to get all the results from a single table
-function getAllDepts() {
-    db.query(`SELECT * FROM department`, function (err, results) {
-        console.table(results);
-    });
+async function getAllDepts() {
+    try {
+    const [results] = await db.execute(`SELECT * FROM department`);
+    console.table(results);
+    }
+        catch(err) {
+        console.log(err);    
+    };
 };
 
-function getAllRoles() {
-    db.query(`SELECT * FROM role`, function (err, results) {
+async function getAllRoles() {
+    try {
+    const [results] = await db.execute(`SELECT * FROM role`);
         console.table(results);
-    });
+    }
+        catch(err) {
+        console.log(err);
+    };
 };
 
-function getAllEmp() {
-    db.query(`SELECT * FROM employee`, function (err, results) {
+async function getAllEmp() {
+    try {
+    const [results] = await db.execute(`SELECT * FROM employee`);
         console.table(results);
-    });
+    }
+        catch(err) {
+        console.log(err);
+    };
 };
 
 async function getEmployeeId(getEmpName) {
