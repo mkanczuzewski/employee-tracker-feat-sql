@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const db = require('./db/connection');
 const employeeArray = [];
 const roleArray = [];
+const deptArray = [];
 
 const promptQuestions = 
 [
@@ -41,10 +42,11 @@ const promptQuestions =
         when: (answers) => answers.choices === 'Add a Role',
     },
     {
-        type: 'input',
+        type: 'list',
         name: 'deptName',
         message: 'What is the employee\'s department?',
         when: (answers) => answers.choices === 'Add a Role',
+        choices: deptArray,
     },
     {
         type: 'input',
@@ -105,12 +107,19 @@ async function loadRoleList() {
     roleArray.push(...roleTitlesArray);
 }
 
+async function loadDepartmentList() {
+    const [rows] = await db.execute(`SELECT name FROM department;`);
+    const deptNameArray = rows.map((row) => row.name);
+    deptArray.push(...deptNameArray);
+}
+
 //Create a function to initialize app
 async function init() 
 {
     try {
     await loadEmployeeList();
     await loadRoleList();
+    await loadDepartmentList();
     return inquirer.prompt(promptQuestions)
     .then(async (inputAnswer) => {
         if (inputAnswer.choices === 'View all Departments')
@@ -127,15 +136,15 @@ async function init()
         }
         else if (inputAnswer.choices === 'Add a Role')
         {
-            addRole(inputAnswer.roleTitle, inputAnswer.roleSalary, inputAnswer.deptName);
+            await addRole(inputAnswer.roleTitle, inputAnswer.roleSalary, inputAnswer.deptName);
         }
         else if (inputAnswer.choices === 'Add a Department')
         {
-            addDept(inputAnswer.addDeptName);
+            await addDept(inputAnswer.addDeptName);
         }
         else if (inputAnswer.choices === 'Add an Employee')
         {
-            addEmployee(inputAnswer.newEmpFName, inputAnswer.newEmpLName, inputAnswer.newEmpTitle, inputAnswer.newEmpMgr);
+            await addEmployee(inputAnswer.newEmpFName, inputAnswer.newEmpLName, inputAnswer.newEmpTitle, inputAnswer.newEmpMgr);
         }
         else if (inputAnswer.choices === 'Update an Employee Role')
         {
@@ -207,47 +216,62 @@ async function getRoleId(getRoleName) {
     return roleId;
 }
 
-function addRole(roleTitle, roleSalary, deptName)
-{
-    const addRoleSql = `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`;
-    const addRoleParams = [roleTitle, roleSalary, deptName];
-    db.query(addRoleSql, addRoleParams, (err, result) => 
-    {
-        if (err) {
-        console.log(err.message);
-        return;
-        }
-        console.log('Role successfully added to database.');
-    });
-};
+async function getDeptId(getDeptName) {
+    const getDeptIdSql = 
+    `SELECT * FROM department WHERE (name)=` +
+    db.escape(getDeptName);
 
-function addDept(addDeptName)
-{
-    const addRoleSql = `INSERT INTO department (name) VALUES (?)`;
-    const addRoleParams = [addDeptName];
-    db.query(addRoleSql, addRoleParams, (err, result) => 
-    {
-        if (err) {
-        console.log(err.message);
-        return;
-        }
-        console.log('Department successfully added to database.');
-    });
-};
+    const [rows] = await db.execute(getDeptIdSql);
+    const deptId = rows[0].id;
 
-function addEmployee(newEmpFName, newEmpLName, newEmpTitle, newEmpMgr)
-{
-    const addRoleSql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`;
-    const addRoleParams = [newEmpFName, newEmpLName, newEmpTitle, newEmpMgr];
-    db.query(addRoleSql, addRoleParams, (err, result) => 
-    {
-        if (err) {
-        console.log(err.message);
-        return;
-        }
-        console.log('Employee successfully added to database.');
-    });
+    return deptId;
 }
+
+async function addRole(roleTitle, roleSalary, deptName)
+{
+    try 
+    {
+        var deptId = await getDeptId(deptName)
+        const addRoleSql = `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`;
+        const addRoleParams = [roleTitle, roleSalary, deptId];
+        await db.execute(addRoleSql, addRoleParams); 
+        console.log('Role successfully added to database.');    
+    }
+    catch (err)
+    {
+        console.log(err.message); 
+    };
+};
+
+async function addDept(addDeptName)
+{
+    try
+    {
+        const addRoleSql = `INSERT INTO department (name) VALUES (?)`;
+        const addRoleParams = [addDeptName];
+        await db.execute(addRoleSql, addRoleParams);
+        console.log('Department successfully added to database.');
+    }
+    catch (err)
+    {
+        console.log(err.message);
+    };
+};
+
+async function addEmployee(newEmpFName, newEmpLName, newEmpTitle, newEmpMgr)
+{
+    try
+    {
+        const addRoleSql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`;
+        const addRoleParams = [newEmpFName, newEmpLName, newEmpTitle, newEmpMgr];
+        await db.execute(addRoleSql, addRoleParams);
+        console.log('Employee successfully added to database.');
+    }
+    catch (err)
+    {
+        console.log(err.message);
+    };
+};
 
 async function updateRole(empName, updateRoleName)
 {
