@@ -93,34 +93,27 @@ const promptQuestions =
     }
 ];
 
-function loadEmployeeList() 
-{
-    db.query(`SELECT concat(first_name, \' \', last_name) as employeeName FROM employee;`, function (err, results) {
-        for (var i = 0; i < results.length; i++)
-        {
-            employeeArray.push(results[i].employeeName)
-        }
-        
-    });
+async function loadEmployeeList() {
+    const query = `SELECT id, concat(first_name, \' \', last_name) as employeeName FROM employee;`;
+    const [rows] = await db.execute(query);
+    const empNamesArray = rows.map((row) => row.employeeName);
+    employeeArray.push(...empNamesArray);
 }
 
-function loadRoleList() 
-{
-    db.query(`SELECT title FROM role;`, function (err, results) {
-        for (var i = 0; i < results.length; i++)
-        {
-            roleArray.push(results[i].title)
-        }
-    });
+async function loadRoleList() {
+    const [rows] = await db.execute(`SELECT title FROM role;`);
+    const roleTitlesArray = rows.map((row) => row.title);
+    roleArray.push(...roleTitlesArray);
 }
 
 //Create a function to initialize app
-function init() 
+async function init() 
 {
-    loadEmployeeList();
-    loadRoleList();
+    try {
+    await loadEmployeeList();
+    await loadRoleList();
     return inquirer.prompt(promptQuestions)
-    .then((inputAnswer) => {
+    .then(async (inputAnswer) => {
         if (inputAnswer.choices === 'View all Departments')
         {
             getAllDepts();
@@ -147,11 +140,16 @@ function init()
         }
         else if (inputAnswer.choices === 'Update an Employee Role')
         {
-            updateRole(inputAnswer.selectEmployee, inputAnswer.updateRole);
+            await updateRole(inputAnswer.selectEmployee, inputAnswer.updateRole);
         }
+        db.end();
     });
-};
-updateRole
+}
+catch (err){
+    console.log(err);
+}
+}
+
 // Function call to initialize app
 init()
 
@@ -173,6 +171,19 @@ function getAllEmp() {
         console.table(results);
     });
 };
+
+async function getEmployeeId(getEmpName) {
+    const getEmpIdSql =
+      `SELECT * FROM employee WHERE CONCAT(first_name, ` +
+      db.escape(" ") +
+      `, last_name)=` +
+      db.escape(getEmpName);
+  
+    const [rows] = await db.execute(getEmpIdSql);
+    const empId = rows[0].id;
+  
+    return empId;
+  }
 
 function addRole(roleTitle, roleSalary, deptName)
 {
@@ -216,21 +227,19 @@ function addEmployee(newEmpFName, newEmpLName, newEmpTitle, newEmpMgr)
     });
 }
 
-function updateRole(empName, updateRoleName)
+async function updateRole(empName, updateRoleName)
 {
-    console.log(empName);
-    console.log(updateRoleName);
-    var empId = 2 //getEmployeeId(empName);
-    // console.log(empId);
+    try {
+    var empId = await getEmployeeId(empName);
+    console.log("in updateRole");
+    console.log(empId);
     var roleId = 2
     const addRoleSql = `UPDATE employee SET role_id = ? WHERE id = ?`;
     const addRoleParams = [roleId, empId];
-    db.query(addRoleSql, addRoleParams, (err, result) => 
-    {
-        if (err) {
-        console.log(err.message);
-        return;
-        }
+    await db.execute(addRoleSql, addRoleParams);
         console.log('Employee title successfully updated in database.');
-    });
+}
+catch (err) {
+    console.log("Update role error:", err);
+}
 }
