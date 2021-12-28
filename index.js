@@ -2,15 +2,7 @@ const res = require('express/lib/response');
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 const employeeArray = [];
-
-// const confirmRoleSalary = async (input) => 
-// {
-//     if (input !== decimal) 
-//     {
-//         return 'Incorrect Answer';
-//     }
-//     return true;
-// };
+const roleArray = [];
 
 const promptQuestions = 
 [
@@ -93,11 +85,12 @@ const promptQuestions =
         choices: employeeArray,
     },
     {
-        type: 'input',
+        type: 'list',
         name: 'updateRole',
-        message: 'Change Employee Role:',
+        message: 'Select the target role to change to:',
         when: (answers) => answers.choices === 'Update an Employee Role',
-    },
+        choices: roleArray,
+    }
 ];
 
 function loadEmployeeList() 
@@ -111,10 +104,21 @@ function loadEmployeeList()
     });
 }
 
+function loadRoleList() 
+{
+    db.query(`SELECT title FROM role;`, function (err, results) {
+        for (var i = 0; i < results.length; i++)
+        {
+            roleArray.push(results[i].title)
+        }
+    });
+}
+
 //Create a function to initialize app
 function init() 
 {
     loadEmployeeList();
+    loadRoleList();
     return inquirer.prompt(promptQuestions)
     .then((inputAnswer) => {
         if (inputAnswer.choices === 'View all Departments')
@@ -143,7 +147,7 @@ function init()
         }
         else if (inputAnswer.choices === 'Update an Employee Role')
         {
-            updateRole(inputAnswer.updateRole);
+            updateRole(inputAnswer.selectEmployee, inputAnswer.updateRole);
         }
     });
 };
@@ -212,10 +216,15 @@ function addEmployee(newEmpFName, newEmpLName, newEmpTitle, newEmpMgr)
     });
 }
 
-function updateRole(updateRole, empId)
+function updateRole(empName, updateRoleName)
 {
+    console.log(empName);
+    console.log(updateRoleName);
+    var empId = 2 //getEmployeeId(empName);
+    // console.log(empId);
+    var roleId = 2
     const addRoleSql = `UPDATE employee SET role_id = ? WHERE id = ?`;
-    const addRoleParams = [updateRole, empId];
+    const addRoleParams = [roleId, empId];
     db.query(addRoleSql, addRoleParams, (err, result) => 
     {
         if (err) {
