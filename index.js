@@ -185,6 +185,17 @@ async function getEmployeeId(getEmpName) {
     return empId;
   }
 
+async function getRoleId(getRoleName) {
+    const getRoleIdSql =
+        `SELECT * FROM role WHERE (title)=` +
+        db.escape(getRoleName);
+
+    const [rows] = await db.execute(getRoleIdSql);
+    const roleId = rows[0].id;
+
+    return roleId;
+}
+
 function addRole(roleTitle, roleSalary, deptName)
 {
     const addRoleSql = `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`;
@@ -231,9 +242,7 @@ async function updateRole(empName, updateRoleName)
 {
     try {
     var empId = await getEmployeeId(empName);
-    console.log("in updateRole");
-    console.log(empId);
-    var roleId = 2
+    var roleId = await getRoleId(updateRoleName);
     const addRoleSql = `UPDATE employee SET role_id = ? WHERE id = ?`;
     const addRoleParams = [roleId, empId];
     await db.execute(addRoleSql, addRoleParams);
