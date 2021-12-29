@@ -194,7 +194,7 @@ async function getAllDepts()
 async function getAllRoles() {
     try 
     {
-        const [results] = await db.execute(`SELECT * FROM role`);
+        const [results] = await db.execute(`SELECT role.id, role.title, role.salary, department.name FROM role INNER JOIN department ON role.department_id=department.id;`);
         console.table(results);
     }
     catch(err) {
