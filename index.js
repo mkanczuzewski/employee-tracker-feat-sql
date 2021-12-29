@@ -206,7 +206,22 @@ async function getAllEmp()
 {
     try 
     {
-        const [results] = await db.execute(`SELECT * FROM employee`);
+        const getAllEmpSql = `SELECT
+        employee.id,
+        employee.first_name,
+        employee.last_name,
+        role.title,
+        department.name AS "Department Name",
+        role.salary,
+        CONCAT(manager.first_name, " ",manager.last_name) as "Manager Name"
+        FROM employee
+        JOIN role
+        ON employee.role_id=role.id
+        JOIN department
+        ON department.id=role.department_id
+        JOIN employee as Manager
+        ON employee.manager_id=manager.id;`
+        const [results] = await db.execute(getAllEmpSql);
         console.table(results);
     }
     catch(err) {
