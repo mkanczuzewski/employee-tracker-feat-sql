@@ -3,6 +3,7 @@ const db = require('./db/connection');
 const employeeArray = [];
 const roleArray = [];
 const deptArray = [];
+const managerArray = [];
 
 const promptQuestions = 
 [
@@ -67,16 +68,18 @@ const promptQuestions =
         when: (answers) => answers.choices === 'Add an Employee',
     },
     {
-        type: 'input',
+        type: 'list',
         name: 'newEmpTitle',
         message: 'Add new employee title:',
         when: (answers) => answers.choices === 'Add an Employee',
+        choices: roleArray,
     },
     {
-        type: 'input',
+        type: 'list',
         name: 'newEmpMgr',
         message: 'Add new employee Manager:',
         when: (answers) => answers.choices === 'Add an Employee',
+        choices: managerArray,
     },
     {
         type: 'list',
@@ -113,6 +116,13 @@ async function loadDepartmentList() {
     deptArray.push(...deptNameArray);
 }
 
+async function loadManagerList() {
+    const query = `select concat(e.first_name, \' \', e.last_name) as employeeName from employee as e inner join role as r on e.role_id = r.id where r.title like '%manager'`;
+    const [rows] = await db.execute(query);
+    const empNamesArray = rows.map((row) => row.employeeName);
+    managerArray.push(...empNamesArray);
+}
+
 //Create a function to initialize app
 async function init() 
 {
@@ -120,6 +130,7 @@ async function init()
     await loadEmployeeList();
     await loadRoleList();
     await loadDepartmentList();
+    await loadManagerList();
     return inquirer.prompt(promptQuestions)
     .then(async (inputAnswer) => {
         if (inputAnswer.choices === 'View all Departments')
@@ -262,8 +273,10 @@ async function addEmployee(newEmpFName, newEmpLName, newEmpTitle, newEmpMgr)
 {
     try
     {
+        var roleId = await getRoleId(newEmpTitle);
+        let mgrId = await getEmployeeId(newEmpMgr);
         const addRoleSql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`;
-        const addRoleParams = [newEmpFName, newEmpLName, newEmpTitle, newEmpMgr];
+        const addRoleParams = [newEmpFName, newEmpLName, roleId, mgrId];
         await db.execute(addRoleSql, addRoleParams);
         console.log('Employee successfully added to database.');
     }
